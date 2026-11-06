@@ -3,75 +3,238 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Personal Task & Project Tracker</title>
+  <meta name="theme-color" content="#0f172a">
+  <title>My Project Hub</title>
   <style>
-    body { 
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; 
-      max-width: 600px; 
-      margin: 50px auto; 
-      padding: 20px; 
-      background: #0f172a; 
-      color: #f8fafc; 
-      border-radius: 12px;
-      box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+    :root {
+      color-scheme: dark;
+      --bg: #0f172a;
+      --panel: #1e293b;
+      --text: #f8fafc;
+      --muted: #94a3b8;
+      --accent: #38bdf8;
+      --accent-button: #0284c7;
+      --border: #334155;
+      --danger: #ef4444;
+      --success: #16a34a;
     }
-    h1 { color: #38bdf8; text-align: center; }
+
+    * { box-sizing: border-box; }
+
+    body {
+      min-height: 100vh;
+      margin: 0;
+      padding: 32px 16px;
+      display: grid;
+      place-items: start center;
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    }
+
+    .app {
+      width: min(100%, 600px);
+      margin-top: 24px;
+      padding: 24px;
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      background: #111c31;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.35);
+    }
+
+    h1 { margin: 0; color: var(--accent); text-align: center; }
+
+    .subtitle {
+      margin: 10px 0 24px;
+      color: var(--muted);
+      text-align: center;
+    }
+
     .input-group { display: flex; gap: 10px; margin: 25px 0; }
-    input { 
-      flex: 1; 
-      padding: 12px; 
-      border-radius: 8px; 
-      border: 1px solid #334155; 
-      background: #1e293b; 
-      color: #fff; 
-      font-size: 16px; 
+
+    input {
+      min-width: 0;
+      flex: 1;
+      padding: 12px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: var(--panel);
+      color: var(--text);
+      font: inherit;
     }
-    button { 
-      padding: 12px 20px; 
-      border-radius: 8px; 
-      border: none; 
-      background: #0284c7; 
-      color: white; 
-      cursor: pointer; 
-      font-weight: bold; 
+
+    button {
+      padding: 12px 18px;
+      border: 0;
+      border-radius: 8px;
+      background: var(--accent-button);
+      color: white;
+      cursor: pointer;
+      font: inherit;
+      font-weight: 700;
     }
-    button:hover { background: #0369a1; }
-    ul { list-style: none; padding: 0; }
-    li { 
-      display: flex; 
-      justify-content: space-between; 
-      align-items: center; 
-      background: #1e293b; 
-      padding: 12px 16px; 
-      border-radius: 8px; 
-      margin-bottom: 10px; 
+
+    button:hover { filter: brightness(1.12); }
+    button:focus-visible, input:focus-visible {
+      outline: 3px solid var(--accent);
+      outline-offset: 2px;
     }
-    .del-btn { background: #ef4444; padding: 6px 12px; font-size: 13px; }
-    .del-btn:hover { background: #dc2626; }
+
+    ul { display: grid; gap: 10px; margin: 0; padding: 0; list-style: none; }
+
+    .task-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 12px 14px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: var(--panel);
+    }
+
+    .task-text { min-width: 0; overflow-wrap: anywhere; }
+    .task-item.done .task-text { color: var(--muted); text-decoration: line-through; }
+    .task-actions { display: flex; flex-shrink: 0; gap: 8px; }
+    .done-btn { background: var(--success); }
+    .delete-btn { background: var(--danger); }
+
+    .empty-state {
+      padding: 18px;
+      border: 1px dashed var(--border);
+      border-radius: 8px;
+      color: var(--muted);
+      text-align: center;
+    }
+
+    .empty-state[hidden] { display: none; }
+
+    @media (max-width: 480px) {
+      .app { padding: 20px 16px; }
+      .input-group { flex-direction: column; }
+      .task-item { align-items: flex-start; flex-direction: column; }
+      .task-actions { width: 100%; }
+      .task-actions button { flex: 1; }
+    }
   </style>
 </head>
 <body>
-  <h1>🚀 My Project Hub</h1>
-  <p style="text-align: center; color: #94a3b8;">A simple tracker built with HTML, CSS, and JavaScript.</p>
-  
-  <div class="input-group">
-    <input type="text" id="taskInput" placeholder="Add a project milestone or task...">
-    <button onclick="addTask()">Add</button>
-  </div>
-  
-  <ul id="taskList"></ul>
+  <main class="app">
+    <h1>🚀 My Project Hub</h1>
+    <p class="subtitle">A simple tracker built with HTML, CSS, and JavaScript.</p>
+
+    <form class="input-group" id="taskForm">
+      <label for="taskInput" class="visually-hidden">Task or milestone</label>
+      <input
+        type="text"
+        id="taskInput"
+        placeholder="Add a project milestone or task..."
+        maxlength="200"
+        required
+      >
+      <button type="submit">Add task</button>
+    </form>
+
+    <p class="empty-state" id="emptyState">No tasks yet. Add your first milestone.</p>
+    <ul id="taskList" aria-label="Tasks" aria-live="polite"></ul>
+  </main>
 
   <script>
-    function addTask() {
-      const input = document.getElementById('taskInput');
-      const text = input.value.trim();
-      if (!text) return;
-      
-      const li = document.createElement('li');
-      li.innerHTML = `<span>${text}</span> <button class="del-btn" onclick="this.parentElement.remove()">Done</button>`;
-      document.getElementById('taskList').appendChild(li);
-      input.value = '';
+    const STORAGE_KEY = "project-hub-tasks";
+    const taskForm = document.getElementById("taskForm");
+    const taskInput = document.getElementById("taskInput");
+    const taskList = document.getElementById("taskList");
+    const emptyState = document.getElementById("emptyState");
+
+    function loadTasks() {
+      try {
+        const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
+        return Array.isArray(saved)
+          ? saved.filter((task) => task && typeof task.text === "string")
+              .map((task) => ({
+                id: String(task.id || createId()),
+                text: task.text,
+                done: Boolean(task.done)
+              }))
+          : [];
+      } catch {
+        return [];
+      }
     }
+
+    let tasks = loadTasks();
+
+    function createId() {
+      return globalThis.crypto?.randomUUID?.() || `${Date.now()}-${Math.random()}`;
+    }
+
+    function saveTasks() {
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(tasks));
+      } catch {
+        // The task list remains usable if browser storage is unavailable or full.
+      }
+    }
+
+    function renderTasks() {
+      taskList.replaceChildren();
+      emptyState.hidden = tasks.length > 0;
+
+      for (const task of tasks) {
+        const item = document.createElement("li");
+        item.className = `task-item${task.done ? " done" : ""}`;
+
+        const text = document.createElement("span");
+        text.className = "task-text";
+        text.textContent = task.text;
+
+        const actions = document.createElement("div");
+        actions.className = "task-actions";
+
+        const toggleButton = document.createElement("button");
+        toggleButton.type = "button";
+        toggleButton.className = "done-btn";
+        toggleButton.textContent = task.done ? "Undo" : "Done";
+        toggleButton.setAttribute("aria-label", `${task.done ? "Reopen" : "Complete"}: ${task.text}`);
+        toggleButton.addEventListener("click", () => {
+          task.done = !task.done;
+          saveTasks();
+          renderTasks();
+        });
+
+        const deleteButton = document.createElement("button");
+        deleteButton.type = "button";
+        deleteButton.className = "delete-btn";
+        deleteButton.textContent = "Delete";
+        deleteButton.setAttribute("aria-label", `Delete: ${task.text}`);
+        deleteButton.addEventListener("click", () => {
+          tasks = tasks.filter((candidate) => candidate.id !== task.id);
+          saveTasks();
+          renderTasks();
+        });
+
+        actions.append(toggleButton, deleteButton);
+        item.append(text, actions);
+        taskList.append(item);
+      }
+    }
+
+    taskForm.addEventListener("submit", (event) => {
+      event.preventDefault();
+      const text = taskInput.value.trim();
+      if (!text) {
+        taskInput.focus();
+        return;
+      }
+
+      tasks.unshift({ id: createId(), text, done: false });
+      saveTasks();
+      renderTasks();
+      taskForm.reset();
+      taskInput.focus();
+    });
+
+    renderTasks();
   </script>
 </body>
 </html>
